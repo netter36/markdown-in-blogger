@@ -72,38 +72,39 @@ MarkdownHighlightInBlogger.convertMD = function () {
     converter.setFlavor("github");
 
     $('pre.markdown').each(function (i, block) {
-  var rawtext = block.innerText;
-  var imageMatch = rawtext.match(/!\[[^\]]*?\]\(\s*<?([^>\s)]+)>?(?:\s+["'][^"']*["'])?\s*\)/i);
-  var imageUrl = imageMatch && imageMatch[1] ? imageMatch[1] : "";
-  var md_html = converter.makeHtml(rawtext);
-  var md = $(md_html);
-
-  if (imageUrl) {
-    var post = $(block).closest(".post, .post-outer, .hentry, article");
-    var thumbImg = post.find(".post-thumbnail img, .post-thumb img, .item-thumbnail img, .entry-thumbnail img, img.thumbnail").first();
-
-    if (thumbImg.length) {
-      thumbImg.attr("src", imageUrl);
-      thumbImg.removeAttr("srcset data-src");
-    } else if (post.length) {
-      var link = post.find("h2 a, h3 a, .post-title a, a[href]").first();
-      var thumb = $("<a/>", {
-        "class": "markdown-auto-thumbnail",
-        "href": link.length ? link.attr("href") : "#"
-      });
-
-      $("<img/>", {
-        "src": imageUrl,
-        "alt": ""
-      }).appendTo(thumb);
-
-      post.prepend(thumb);
-    }
-  }
-
-  md.insertBefore(block);
-  block.hidden = true;
-});
+      var rawtext = block.innerText;
+      var imageMatch = rawtext.match(/!\[[^\]]*?\]\(\s*<?([^>\s)]+)>?(?:\s+["'][^"']*["'])?\s*\)/i);
+      var imageUrl = imageMatch && imageMatch[1] ? imageMatch[1] : "";
+      var md_html = converter.makeHtml(rawtext);
+      var md = $(md_html);
+    
+      if (imageUrl) {
+        var post = $(block).closest(".post, .post-outer, .hentry, article");
+        var thumbImg = post.find(".post-thumbnail img, .post-thumb img, .item-thumbnail img, .entry-thumbnail img, img.thumbnail").first();
+    
+        if (thumbImg.length) {
+          thumbImg.attr("src", imageUrl);
+          thumbImg.removeAttr("srcset data-src");
+        } else if (post.length) {
+          var link = post.find("h2 a, h3 a, .post-title a, a[href]").first();
+          var thumb = $("<a/>", {
+            "class": "markdown-auto-thumbnail",
+            "href": link.length ? link.attr("href") : "#"
+          });
+    
+          $("<img/>", {
+            "src": imageUrl,
+            "alt": ""
+          }).appendTo(thumb);
+    
+          post.prepend(thumb);
+        }
+      }
+    
+      md.insertBefore(block);
+      block.hidden = true;
+    });
+    
     $("pre code").each(function (i, block) {
       hljs.highlightBlock(block);
     });
