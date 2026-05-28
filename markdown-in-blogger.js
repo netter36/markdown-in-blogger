@@ -1,18 +1,3 @@
-//
-// markdown-highlight-in-blogger.js -- javascript for using Markdown in Blogger
-//
-
-// namespace
-var MarkdownHighlightInBlogger = {};
-
-MarkdownHighlightInBlogger.unescapeHTML = function (html) {
-  var htmlNode = document.createElement("DIV");
-  htmlNode.innerHTML = html;
-  if (htmlNode.innerText !== undefined)
-    return htmlNode.innerText;
-  return htmlNode.textContent;
-};
-
 MarkdownHighlightInBlogger.renderMermaid = function () {
   if (!window.mermaid) return;
 
@@ -21,13 +6,9 @@ MarkdownHighlightInBlogger.renderMermaid = function () {
     theme: "default"
   });
 
-  if (mermaid.run) {
-    mermaid.run({
-      querySelector: ".mermaid"
-    });
-  } else {
-    mermaid.init(undefined, $(".mermaid").toArray());
-  }
+  mermaid.run({
+    querySelector: ".mermaid"
+  });
 };
 
 MarkdownHighlightInBlogger.convertMD = function () {
@@ -42,21 +23,27 @@ MarkdownHighlightInBlogger.convertMD = function () {
       var md_html = converter.makeHtml(rawtext);
       var md = $(md_html);
 
-      md.find("pre code.language-mermaid, pre code.mermaid").each(function (j, code) {
-        var diagram = $("<div/>", {
-          "class": "mermaid",
-          "text": code.textContent
-        });
+      md.find("pre code.language-mermaid, pre code.mermaid")
+        .add(md.filter("pre").find("code.language-mermaid, code.mermaid"))
+        .each(function (j, code) {
+          var diagram = $("<div/>", {
+            "class": "mermaid",
+            "text": code.textContent
+          });
 
-        $(code).closest("pre").replaceWith(diagram);
-      });
+          $(code).closest("pre").replaceWith(diagram);
+        });
 
       md.insertBefore(block);
       block.hidden = true;
     });
 
     $("pre code").not(".language-mermaid, .mermaid").each(function (i, block) {
-      hljs.highlightBlock(block);
+      if (hljs.highlightElement) {
+        hljs.highlightElement(block);
+      } else {
+        hljs.highlightBlock(block);
+      }
     });
 
     MarkdownHighlightInBlogger.renderMermaid();
@@ -65,5 +52,3 @@ MarkdownHighlightInBlogger.convertMD = function () {
     console.error(exc);
   }
 };
-
-$(document).ready(MarkdownHighlightInBlogger.convertMD);
