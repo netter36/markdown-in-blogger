@@ -4,35 +4,6 @@
 
 var MarkdownHighlightInBlogger = {};
 
-MarkdownHighlightInBlogger.unescapeHTML = function (html) {
-  var htmlNode = document.createElement("DIV");
-  htmlNode.innerHTML = html;
-
-  if (htmlNode.innerText !== undefined)
-    return htmlNode.innerText;
-
-  return htmlNode.textContent;
-};
-
-MarkdownHighlightInBlogger.renderMermaid = function () {
-  if (!window.mermaid) return;
-
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: "default"
-  });
-
-  if (mermaid.run) {
-    mermaid.run({
-      querySelector: ".mermaid"
-    }).catch(function (exc) {
-      console.error(exc);
-    });
-  } else {
-    mermaid.init(undefined, document.querySelectorAll(".mermaid"));
-  }
-};
-
 MarkdownHighlightInBlogger.convertMD = function () {
   try {
     console.info("Converting markdown using jQuery");
@@ -45,7 +16,11 @@ MarkdownHighlightInBlogger.convertMD = function () {
       var md_html = converter.makeHtml(rawtext);
       var container = $("<div/>").html(md_html);
 
-      container.find("pre code.language-mermaid, pre code.mermaid").each(function (j, code) {
+      container.find("pre > code").each(function (j, code) {
+        var className = String(code.className || "").toLowerCase();
+
+        if (className.indexOf("mermaid") === -1) return;
+
         var diagram = $("<div/>", {
           "class": "mermaid",
           "text": code.textContent
@@ -58,7 +33,7 @@ MarkdownHighlightInBlogger.convertMD = function () {
       block.hidden = true;
     });
 
-    $("pre code").not(".language-mermaid, .mermaid").each(function (i, block) {
+    $("pre code").each(function (i, block) {
       if (hljs.highlightElement) {
         hljs.highlightElement(block);
       } else {
@@ -70,6 +45,31 @@ MarkdownHighlightInBlogger.convertMD = function () {
 
   } catch (exc) {
     console.error(exc);
+  }
+};
+
+MarkdownHighlightInBlogger.renderMermaid = function () {
+  var result;
+
+  if (!window.mermaid) return;
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "default"
+  });
+
+  if (mermaid.run) {
+    result = mermaid.run({
+      querySelector: ".mermaid"
+    });
+
+    if (result && result.catch) {
+      result.catch(function (exc) {
+        console.error(exc);
+      });
+    }
+  } else {
+    mermaid.init(undefined, document.querySelectorAll(".mermaid"));
   }
 };
 
