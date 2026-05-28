@@ -1,3 +1,19 @@
+//
+// markdown-highlight-in-blogger.js -- javascript for using Markdown in Blogger
+//
+
+var MarkdownHighlightInBlogger = {};
+
+MarkdownHighlightInBlogger.unescapeHTML = function (html) {
+  var htmlNode = document.createElement("DIV");
+  htmlNode.innerHTML = html;
+
+  if (htmlNode.innerText !== undefined)
+    return htmlNode.innerText;
+
+  return htmlNode.textContent;
+};
+
 MarkdownHighlightInBlogger.renderMermaid = function () {
   if (!window.mermaid) return;
 
@@ -6,9 +22,15 @@ MarkdownHighlightInBlogger.renderMermaid = function () {
     theme: "default"
   });
 
-  mermaid.run({
-    querySelector: ".mermaid"
-  });
+  if (mermaid.run) {
+    mermaid.run({
+      querySelector: ".mermaid"
+    }).catch(function (exc) {
+      console.error(exc);
+    });
+  } else {
+    mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+  }
 };
 
 MarkdownHighlightInBlogger.convertMD = function () {
@@ -21,20 +43,18 @@ MarkdownHighlightInBlogger.convertMD = function () {
     $("pre.markdown").each(function (i, block) {
       var rawtext = block.innerText;
       var md_html = converter.makeHtml(rawtext);
-      var md = $(md_html);
+      var container = $("<div/>").html(md_html);
 
-      md.find("pre code.language-mermaid, pre code.mermaid")
-        .add(md.filter("pre").find("code.language-mermaid, code.mermaid"))
-        .each(function (j, code) {
-          var diagram = $("<div/>", {
-            "class": "mermaid",
-            "text": code.textContent
-          });
-
-          $(code).closest("pre").replaceWith(diagram);
+      container.find("pre code.language-mermaid, pre code.mermaid").each(function (j, code) {
+        var diagram = $("<div/>", {
+          "class": "mermaid",
+          "text": code.textContent
         });
 
-      md.insertBefore(block);
+        $(code).closest("pre").replaceWith(diagram);
+      });
+
+      container.contents().insertBefore(block);
       block.hidden = true;
     });
 
@@ -52,3 +72,5 @@ MarkdownHighlightInBlogger.convertMD = function () {
     console.error(exc);
   }
 };
+
+$(document).ready(MarkdownHighlightInBlogger.convertMD);
